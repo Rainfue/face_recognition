@@ -1,4 +1,4 @@
-path: D:\Helper\MLBazyak\homework\some_data\face_rec_data\face_det
+path: C:\Users\user1\Project\some_data\face_rec_data\face_det
 train: train/images
 val: valid/images
 test: test/images
@@ -8,17 +8,17 @@ hsv_h: 0.015    # hue change
 hsv_s: 0.7      # saturation change
 hsv_v: 0.4      # brightness change
 
-degrees: 10     # rotation ±10 degrees
+degrees: 30     # rotation ±10 degrees
 translate: 0.1  # offset 10% of image size
 scale: 0.5      # scaling from 50% to 150%
 shear: 0.2      # shift by ±20 degrees
+flipup: 0.1
+fliplr: 0.1
 
 # learnin` optimization
 cache: disk
-workers: 4
-rect: True
 
 patience: 5
 
 nc: 1
-names: ['price']  
+names: ['face']  

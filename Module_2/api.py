@@ -12,10 +12,10 @@ from ultralytics import YOLO
 #-----------------------------------------------------------------
 # Инициализация дефолтных аргументов функции
 # модель детекции
-model = YOLO(r'D:\Helper\MLBazyak\homework\face_recognition\Module_2\runs\detect\face_detection_v1\weights\best.pt')
+model = YOLO(r'C:\Users\user1\Project\face_recognition\runs\detect\face_detection_v2\weights\best.pt')
 
 # тестовое фото
-img = r'D:\Helper\MLBazyak\homework\face_recognition\Module_2\test6.jpg'
+img = r'c:\Users\user1\Project\some_data\face_rec_data\face_ind\train\Abdullah_al-Attiyah\Abdullah_al-Attiyah_0002.jpg'
 
 #-----------------------------------------------------------------
 # Функции

@@ -8,14 +8,20 @@ import cv2
 # библиотеки для моделей
 from ultralytics import YOLO
 
+#
+import torch
+
 
 #-----------------------------------------------------------------
 # Инициализация дефолтных аргументов функции
 # модель детекции
 model = YOLO(r'C:\Users\user1\Project\face_recognition\runs\detect\face_detection_v2\weights\best.pt')
 
+#
+device = torch.cuda.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 # тестовое фото
-img = r'c:\Users\user1\Project\some_data\face_rec_data\face_ind\train\Abdullah_al-Attiyah\Abdullah_al-Attiyah_0002.jpg'
+img = r'C:\Users\user1\Project\some_data\face_rec_data\face_ind\train\Abdullah_al-Attiyah\Abdullah_al-Attiyah_0002.jpg'
 
 #-----------------------------------------------------------------
 # Функции
@@ -64,7 +70,7 @@ def rec_price(det_model: YOLO = model,
 
     # загружаем фотографии для модели детекции
     image = cv2.imread(img_dir)
-    res = det_model(image)
+    res = det_model.predict(image, conf=0.3, iou=0.1, device=device)
 
     # проходимся по результатами модели
     for result in res:

@@ -11,6 +11,14 @@ from ultralytics import YOLO
 #
 import torch
 
+# 
+from deepface import DeepFace
+#
+import numpy as np
+#
+import pandas as pd
+#
+from sklearn.metrics.pairwise import cosine_similarity
 
 #-----------------------------------------------------------------
 # Инициализация дефолтных аргументов функции
@@ -18,10 +26,13 @@ import torch
 model = YOLO(r'C:\Users\user1\Project\face_recognition\runs\detect\face_detection_v2\weights\best.pt')
 
 #
-device = torch.cuda.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.cuda.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # тестовое фото
 img = r'C:\Users\user1\Project\some_data\face_rec_data\face_ind\train\Abdullah_al-Attiyah\Abdullah_al-Attiyah_0002.jpg'
+
+#
+df = pd.read_pickle(r'C:\Users\user1\Project\face_recognition\Module_2\train.pkl')
 
 #-----------------------------------------------------------------
 # Функции
@@ -47,45 +58,52 @@ def draw_cross(image):
 
     return image
 
-def rec_price(det_model: YOLO = model, 
-              img_dir: str = img):
-    
+def extract_embeddings(img_path: str, 
+                       det_model: YOLO, 
+                       rec_model: str = 'Facenet512'):
     '''
-        Процедура для обнаружения и распознавания цен на изображении.
+        Процедура для выгрузки эмбеддингов из фотографии
 
     Args:
-        - det_model (YOLO): Модель YOLO для обнаружения bounding box'ов цен.
-        - ocr (easyocr.Reader): Модель OCR для распознавания текста.
-        - img_dir (str): Путь к изображению, на котором нужно найти цену.
+        - img_path (str): Путь к изображению, на котором нужно найти цену.
+        - det_model (YOLO): Модель YOLO для обнаружения bounding box'ов лиц.
+        - rec_model (str): Модель распознавания для выделения эмбеддингов лиц.
 
     Returns:
-        list: Функция отображает изображение с обнаруженными ценами и возвращает список с определенными ценами
-    '''    
-    # проверки на правильный тип данных в модели
-    if not isinstance(det_model,YOLO):                                   
-        raise TypeError('det_model должена быть объектом YOLO')
+        list: Функция возвращает ембеддинг в формате списка.
+    '''   
 
-    if not isinstance(img_dir,str):
-        raise TypeError('img_dir должен быть путем к фотографии типа str')
-
-    # загружаем фотографии для модели детекции
-    image = cv2.imread(img_dir)
-    res = det_model.predict(image, conf=0.3, iou=0.1, device=device)
-
-    # проходимся по результатами модели
+    image = cv2.imread(img_path)
+    if image is None:
+        print(f"Ошибка: изображение по пути {img_path} не найдено или не может быть загружено.")
+        return np.nan
+    
+    res = det_model.predict(image, conf=0.3, iou=0.2, device='cpu')
+    # Проверка, найдены ли bounding box'ы
+    if len(res[0].boxes) == 0:
+        return np.nan  # Если лицо не найдено, возвращаем np.nan
+    # 
     for result in res:
         boxes = result.boxes.xyxy.cpu().numpy()
         for box in boxes:
-            # находим x и y боксов, которые определила модель детекции
-            x1, y1, x2, y2 = map(int, box)
+            x1,y1,x2,y2 = map(int, box)
+            #
+            crop = image[y1:y2, x1:x2]
 
-            cv2.rectangle(image, (x1,y1), (x2,y2), (97, 255, 0), 2)   
-            cv2.putText(image, 'face', (x1,y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 97, 0), 2)
-
-    img_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            try:
+                emb_obj = DeepFace.represent(
+                    img_path=crop,
+                    model_name=rec_model
+                )
+            except Exception as e:
+                print(f'Exception: {e}')
+                return np.nan
+            
+    emb_obj = np.array(emb_obj[0]['embedding']).reshape(1,-1)
     
-    # возвращаем rgb изображение 
-    return img_rgb
+    return emb_obj
+
+
 
 #-----------------------------------------------------------------
 # API
@@ -110,10 +128,56 @@ if uploaded_file is not None:
     with open('temp_image.jpg', 'wb') as f:
         f.write(uploaded_file.getbuffer())
 
-    img_rgb = rec_price(img_dir='temp_image.jpg')
+    input_embed = extract_embeddings(
+        img_path='temp_image.jpg',
+        det_model=model
+    )
 
-    # выводим изображение с найденными (или не найденными) ценниками
-    st.image(img_rgb,
-             caption='Обнаруженные лица',
-             use_container_width=True
-             )
+    similar = 0
+    name = ''
+    treshold = 0.3
+    out_path = ''
+    for i in range(df.shape[0]):
+        # Извлекаем эмбединг из списка словарей
+        embedding_list = df["embedding"].iloc[i]  # Это список словарей
+        if isinstance(embedding_list, list) and len(embedding_list) > 0:
+            embedding = embedding_list[0]['embedding']  # Извлекаем эмбединг из первого словаря
+            X = np.array(embedding).reshape(1, -1)
+            
+            # Вычисляем косинусное сходство
+            cos_sim = float(cosine_similarity(X, input_embed))
+            
+            # Обновляем наиболее похожий результат
+            if cos_sim > similar:
+                similar = cos_sim
+                name = df['name'].iloc[i]
+                out_path = df['img_path'].iloc[i]
+        else:
+            print(f"Ошибка: неверный формат эмбединга в строке {i}")
+
+    if similar < treshold:
+        print('Неизвестная личность')
+    else:
+        print(f'Имя: {name}\nСходство: {similar}')
+
+    img_rgb = cv2.cvtColor(cv2.imread('temp_image.jpg'), cv2.COLOR_BGR2RGB)
+    out_rgb = cv2.cvtColor(cv2.imread(out_path), cv2.COLOR_BGR2RGB)
+
+    # Создаём два столбца
+    col1, col2 = st.columns(2)
+
+    # Отображаем первое изображение в первом столбце
+    with col1:
+        st.image(
+            img_rgb,
+            caption='Input image',
+            use_container_width=True
+        )
+
+    # Отображаем второе изображение во втором столбце
+    with col2:
+        st.image(
+            out_rgb,
+            caption=f'Out image: {name}',
+            use_container_width=True
+    )

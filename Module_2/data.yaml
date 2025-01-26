@@ -1,24 +1,26 @@
-path: C:\Users\user1\Project\some_data\face_rec_data\face_det
-train: train/images
-val: valid/images
-test: test/images
+path: C:\Users\user1\Project\some_data\face_rec_data\face_det # путь к основной папке с данными
+train: train/images                                           # папка с тренировочными изображениями
+val: valid/images                                             # папка с тестовыми изображениями
+test: test/images                                             # папка с изображениями для валидации
 
+# параметры аугментации
 augment: True
-hsv_h: 0.015    # hue change
-hsv_s: 0.7      # saturation change
-hsv_v: 0.4      # brightness change
+hsv_h: 0.015    # изменение оттенка
+hsv_s: 0.7      # изменение насыщенности
+hsv_v: 0.4      # изменение яркости
 
-degrees: 30     # rotation ±10 degrees
-translate: 0.1  # offset 10% of image size
-scale: 0.5      # scaling from 50% to 150%
-shear: 0.2      # shift by ±20 degrees
+degrees: 30     # поворот ±10 градусов
+translate: 0.1  # смещение на 10% от размера изображения
+scale: 0.5      # масштабирование от 50% до 150%
+shear: 0.2      # сдвиг на ±20 градусов
 flipup: 0.1
 fliplr: 0.1
 
-# learnin` optimization
-cache: disk
+# оптимизация обучения
+cache: disk     # кэширование данных на диск для ускорения обучения
 
-patience: 5
+patience: 5     # количество эпох без улучшения, после которых обучение останавливается
 
+# количество и имя классов
 nc: 1
 names: ['face']  

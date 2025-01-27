@@ -3,7 +3,7 @@
 <html lang="en">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Report_m2</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>Report_M2</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7545,7 +7545,6 @@ a.anchor-link {
 
 <span class="c1"># библиотеки для обработки и анализа изображений</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">cv2</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">PIL</span><span class="w"> </span><span class="kn">import</span> <span class="n">Image</span>
 
 <span class="c1"># библиотека для визуализации изображений и графиков</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
@@ -7561,9 +7560,6 @@ a.anchor-link {
 
 <span class="c1"># для работы с массивами и математическими операциями</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-
-<span class="c1"># для вычисления косинусной схожести</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics.pairwise</span><span class="w"> </span><span class="kn">import</span> <span class="n">cosine_similarity</span>
 
 <span class="c1"># библиотека для работы с файловой системой </span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -9178,6 +9174,15 @@ OK
 <p><em>Теперь, можно перейти к созданию интерфейса:</em></p>
 <div class="highlight"><pre><span></span><span class="c1"># название страницы</span>
 <span class="n">st</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s1">'Расплознавание человека по фотографии'</span><span class="p">)</span>
+
+<span class="c1"># кнопка для скачивания справки по приложению</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">r</span><span class="s1">'D:\Helper\MLBazyak\homework\face_recognition\Module_2\Documentation.pdf'</span><span class="p">,</span> <span class="s1">'rb'</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+    <span class="n">st</span><span class="o">.</span><span class="n">download_button</span><span class="p">(</span>
+        <span class="n">label</span><span class="o">=</span><span class="s1">'Справка'</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">=</span><span class="n">file</span><span class="p">,</span>
+        <span class="n">file_name</span><span class="o">=</span><span class="s1">'Справка.pdf'</span><span class="p">,</span>
+        <span class="n">mime</span><span class="o">=</span><span class="s1">'application/pdf'</span>
+    <span class="p">)</span>
 
 <span class="c1"># форма для загрузки фотографии</span>
 <span class="n">uploader</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">file_uploader</span><span class="p">(</span><span class="s1">'Выберите изображение'</span><span class="p">,</span> 

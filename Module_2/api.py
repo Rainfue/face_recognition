@@ -59,6 +59,15 @@ def output_images(path1: str, path2: str, caption2: str):
 # название страницы
 st.title('Распознавание человека по фотографии')
 
+# кнопка для скачивания справки по приложению
+with open(r'D:\Helper\MLBazyak\homework\face_recognition\Module_2\Documentation.pdf', 'rb') as file:
+    st.download_button(
+        label='Справка',
+        data=file,
+        file_name='Справка.pdf',
+        mime='application/pdf'
+    )
+
 # форма для загрузки фотографии
 uploader = st.file_uploader('Выберите изображение', 
                             type=['jpg', 'jpeg', 'png', 'jfif'])

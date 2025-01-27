@@ -99,7 +99,7 @@ if uploader is not None:
                 # если фотография не прошла трешхолд схожести 
                 # (такого лица нет в базе данных)
                 case str() if rec_test == 'unknown':
-                    output_images(user_img, to_many, 'Такого человека нет в базе данных')
+                    output_images(user_img, dont_know, 'Такого человека нет в базе данных')
 
                 # если не получилось извлечь эмбеддинг
                 case str() if rec_test == 'no_emb':

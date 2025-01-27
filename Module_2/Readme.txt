@@ -17,6 +17,8 @@
 
         └── Readme.md 
         └── Readme.txt 
+        └── Documentation.docx
+        └── Documentation.pdf
         └── Report_M2.html 
         └── Report_M2.ipynb 
         └── function.py 

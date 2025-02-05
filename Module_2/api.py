@@ -25,25 +25,27 @@ import os
 # реализованные мной функции распознавания
 from function import get_photo, face_recognition
 
+import tempfile
+
 # -------------------------------------------------------------------------------
 
 # Инициализация модели и данных
-model = YOLO(r'D:\Helper\MLBazyak\homework\face_recognition\runs\detect\face_detection_v2\weights\best.pt')
+model = YOLO(r'face_recognition\runs\detect\face_detection_v2\weights\best.pt')
 # пути к различным изображениям
-no_face = r'D:\Helper\MLBazyak\homework\face_recognition\Module_2\Data\no_face.jpg'
-to_many = r'D:\Helper\MLBazyak\homework\face_recognition\Module_2\Data\to_many.jpg'
-dont_know = r'D:\Helper\MLBazyak\homework\face_recognition\Module_2\Data\dont_know.jpg'
+no_face = r'face_recognition\Module_2\Data\no_face.jpg'
+to_many = r'face_recognition\Module_2\Data\to_many.jpg'
+dont_know = r'face_recognition\Module_2\Data\dont_know.jpg'
 # инициализация датафрейма с эмбеддингами
-df = pd.read_pickle(r'D:\Helper\MLBazyak\homework\face_recognition\Module_2\Data\train.pkl')
+df = pd.read_pickle(r'face_recognition\Module_2\Data\train.pkl')
 # путь к датафрейму
-df_path =r'D:\Helper\MLBazyak\homework\face_recognition\Module_2\Data\train.pkl'
+df_path =r'face_recognition\Module_2\Data\train.pkl'
 
 # -------------------------------------------------------------------------------
 
 # Функция для отображения изображений
-def output_images(path1: str, path2: str, caption2: str):
+def output_images(user_img, path2: str, caption2: str):
     # преобразование цветовой гаммы изображений
-    img_rgb = cv2.cvtColor(cv2.imread(path1), cv2.COLOR_BGR2RGB)
+    img_rgb = cv2.cvtColor(user_img, cv2.COLOR_BGR2RGB)
     out_rgb = cv2.cvtColor(cv2.imread(path2), cv2.COLOR_BGR2RGB)
     # разделение на 2 части
     col1, col2 = st.columns(2)
@@ -60,7 +62,7 @@ def output_images(path1: str, path2: str, caption2: str):
 st.title('Распознавание человека по фотографии')
 
 # кнопка для скачивания справки по приложению
-with open(r'D:\Helper\MLBazyak\homework\face_recognition\Module_2\Documentation.pdf', 'rb') as file:
+with open(r'face_recognition\Module_2\Documentation.pdf', 'rb') as file:
     st.download_button(
         label='Справка',
         data=file,
@@ -69,47 +71,138 @@ with open(r'D:\Helper\MLBazyak\homework\face_recognition\Module_2\Documentation.
     )
 
 # форма для загрузки фотографии
-uploader = st.file_uploader('Выберите изображение', 
-                            type=['jpg', 'jpeg', 'png', 'jfif'])
+uploader = st.file_uploader('Выберите изображение или видео', 
+                            type=['jpg', 'jpeg', 'png', 'jfif', "mp4", "avi"])
 
 # при загрузке изображения в форму:
 if uploader is not None:
-    user_img = 'user_img.jpg'
-    # сохраняем файл как временный
-    with open(user_img, 'wb') as f:
-        f.write(uploader.getbuffer())
-    # пробуем найти лицо на фотографии пользователя
-    crop_test = get_photo(user_img, model)
-    # проверка выполнения функции
-    match crop_test:
-        case str() if crop_test == 'to_many':
-            output_images(user_img, to_many, 'Слишком много лиц на фотографии')
 
-        case str() if crop_test == 'no_face':
-            output_images(user_img, no_face, 'Лицо на фотографии не найдено')
+    # Получаем имя файла
+    file_name = uploader.name
+    print(file_name)
 
-        case tuple():
-            # получаем кроп лица
-            face, path = crop_test
-            # пробуем получить данные о распознавании        
-            rec_test = face_recognition(face, path, df)
+    # Проверяем расширение файла
+    file_extension = os.path.splitext(file_name)[1].lower()  # Извлекаем расширение и приводим к нижнему регистру
+    print(file_extension)
+    # Проверяем, является ли файл изображением
+    if file_extension in ['.jpg', '.jpeg', '.png', '.jfif']:
+            print(file_extension)
+            user_img = 'user_img.jpg'
+            # сохраняем файл как временный
+            with open(user_img, 'wb') as f:
+                f.write(uploader.getbuffer())
+            user_image = cv2.imread(user_img)
 
-            # проверка выполнения функции
-            match rec_test:
-                # если фотография не прошла трешхолд схожести 
-                # (такого лица нет в базе данных)
-                case str() if rec_test == 'unknown':
-                    output_images(user_img, dont_know, 'Такого человека нет в базе данных')
+            if user_image is None:
+                st.error("Ошибка: изображение не может быть загружено.")
+            else:
+                # пробуем найти лицо на фотографии пользователя
+                crop_test = get_photo(user_image, model)
+                # проверка выполнения функции
+                match crop_test:
+                    case str() if crop_test == 'to_many':
+                        output_images(user_img, to_many, 'Слишком много лиц на фотографии')
 
-                # если не получилось извлечь эмбеддинг
-                case str() if rec_test == 'no_emb':
-                    output_images(user_img, no_face, 'Не удалось извлечь эмбеддинг лица\nПопробуйте загрузить фотографию с более четким лицом')
+                    case str() if crop_test == 'no_face':
+                        output_images(user_img, no_face, 'Лицо на фотографии не найдено')
 
-                # если все прошло успешно
-                case tuple():
-                    # получаем результат распознавания
-                    similar, name, path, out_path = face_recognition(face, path, df)
-                    # выводим результаты
-                    output_images(user_img, out_path, f'Результат распознавания: {name}')
-                    
-                    st.write(f'Сходство: {similar*100:.3f}')
+                    case tuple():
+                        # получаем кроп лица
+                        face, img_boxes = crop_test
+                        # пробуем получить данные о распознавании        
+                        rec_test = face_recognition(face, 'test', df)
+
+                        # проверка выполнения функции
+                        match rec_test:
+                            # если фотография не прошла трешхолд схожести 
+                            # (такого лица нет в базе данных)
+                            case str() if rec_test == 'unknown':
+                                output_images(user_img, dont_know, 'Такого человека нет в базе данных')
+
+                            # если не получилось извлечь эмбеддинг
+                            case str() if rec_test == 'no_emb':
+                                output_images(user_img, no_face, 'Не удалось извлечь эмбеддинг лица\nПопробуйте загрузить фотографию с более четким лицом')
+
+                            # если все прошло успешно
+                            case tuple():
+                                # получаем результат распознавания
+                                similar, name, _, out_path = rec_test
+                                # выводим результаты
+                                output_images(img_boxes, dont_know, f'Результат распознавания: {name}')
+                                
+                                st.write(f'Сходство: {similar*100:.3f}')
+
+    elif file_extension in [".mp4", ".avi"]:
+
+        name_place = st.empty()
+
+        print(file_extension)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_file:
+            temp_file.write(uploader.read())
+            video_path = temp_file.name
+
+            # Открываем видео
+            video = cv2.VideoCapture(video_path)
+            if not video.isOpened():
+                st.error("Ошибка: видео не может быть открыто.")
+                st.stop()
+
+            # Создаем VideoWriter для сохранения обработанного видео
+            output_path = "output_video.mp4"
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            fps = int(video.get(cv2.CAP_PROP_FPS))
+            width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
+            # Переменная для ограничения количества вызовов face_recognition
+            tries = 0
+            counter = 0
+            # Место для отображения видео
+            video_placeholder = st.empty()
+
+            # Обработка видео
+            while video.isOpened():
+                ret, frame = video.read()
+                if not ret:
+                    break
+
+                # Обрабатываем кадр
+                result = get_photo(frame, model)
+
+                if isinstance(result, tuple):
+                    crop, img_boxes = result
+
+                    if counter == 10:
+                        tries = 0
+                        counter = 0 
+
+                    # Распознаем лицо (если tries == 0)
+                    if tries == 0:
+                        test_rec = face_recognition(crop, 'test_path', df)
+                        if isinstance(test_rec, tuple):
+                            similar, name, _, _ = test_rec
+                            tries += 1
+                            name_place.write(f'Распознанное имя: {name}\nСхожесть: {similar}')
+
+                            # Добавляем текст на кадр
+                    cv2.putText(img_boxes, f"{name} ({similar:.2f})", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+                    # Сохраняем кадр в выходное видео
+                    out.write(img_boxes)
+
+                    # Отображаем кадр в Streamlit
+                    video_placeholder.image(img_boxes, channels="BGR", use_container_width=True)
+
+                    counter+=1
+
+            # Освобождаем ресурсы
+            video.release()
+            out.release()
+            
+
+
+
+
+
+# =----------=--=-=-===============-------------------------------------------------------

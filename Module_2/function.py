@@ -22,53 +22,53 @@ warnings.filterwarnings("ignore")
 
 # ---------------------------------------------------------------------------------------------
 # функция для получения фотографии
-def get_photo(img_path: str,
-              model: YOLO) -> tuple:
+def get_photo(image: np.ndarray, model: YOLO) -> tuple:
     '''
-        Функция для получения фотографии (для последующего распознания)
+    Функция для получения фотографии (для последующего распознания)
 
     Args:
-        - img_path (str): путь к фотографии
-        
+        - image (np.ndarray): изображение в формате NumPy массива
+        - model (YOLO): модель YOLO для детекции лиц
+
     Returns:
-        - tuple (np.ndarray, str)
+        - tuple: (crop, img_boxes), где:
+            - crop (np.ndarray): обрезанное изображение лица
+            - img_boxes (np.ndarray): исходное изображение с выделенным bounding box
     '''
-    # проверки на правильный тип данных в модели
-    if not isinstance(img_path, str):
-        raise TypeError('img_path должен быть объектом str')
+    # Проверки на правильный тип данных
+    if not isinstance(image, np.ndarray):
+        raise TypeError('image должен быть объектом np.ndarray')
 
     if not isinstance(model, YOLO):
         raise TypeError('model должна быть объектом YOLO')
 
-    # приводим изображение в удобный формат
-    image = cv2.imread(img_path)
-    # проверяем, точно ли мы получаем изображение
-    if image is None:
-        print(f"Ошибка: изображение по пути {img_path} не найдено или не может быть загружено.")
-        return np.nan
-    
-    # используя модель детекции, находим лицо на изображении
+    # Используем модель для детекции лиц
     res = model.predict(image, conf=0.3, iou=0.2, verbose=False)
 
-    # проверка, найдены ли bounding box'ы
+    # Проверка, найдены ли bounding box'ы
     if len(res[0].boxes) == 0:
         print('На фотографии не было найдено лиц, попробуйте другое')
-        return 'no_face'  # если лицо не найдено, возвращаем np.nan
-    
-    # проверка, не больше ли 1 лица найдено
+        return 'no_face'  # Если лицо не найдено, возвращаем строку
+
+    # Проверка, не больше ли 1 лица найдено
     if len(res[0].boxes) > 1:
         print('Слишком много лиц, попробуйте загрузить фотографию с 1 лицом')
-        return 'to_many'  # если лицо не найдено, возвращаем np.nan
-    
-    # проходимся по результатам детекции 
+        return 'to_many'  # Если лицо не найдено, возвращаем строку
+
+    # Создаем копию изображения для отрисовки bounding box
+    img_boxes = image.copy()
+
+    # Проходимся по результатам детекции
     for result in res:
         boxes = result.boxes.xyxy.cpu().numpy()
         for box in boxes:
-            x1,y1,x2,y2 = map(int, box)
-            # обрезаем исходное изображение, оставляя только лицо
+            x1, y1, x2, y2 = map(int, box)
+            # Обрезаем исходное изображение, оставляя только лицо
             crop = image[y1:y2, x1:x2]
+            # Отрисовываем bounding box на изображении
+            cv2.rectangle(img_boxes, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-    return (crop, img_path)
+    return (crop, img_boxes)
 
 # ---------------------------------------------------------------------------------------------
 # функция для отправки результатов распознавания

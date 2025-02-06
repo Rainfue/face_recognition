@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 
 # ---------------------------------------------------------------------------------------------
 # функция для получения фотографии
-def get_photo(image: np.ndarray, model: YOLO) -> tuple:
+def get_photo(image: str | np.ndarray, model: YOLO) -> tuple:
     '''
     Функция для получения фотографии (для последующего распознания)
 
@@ -36,8 +36,14 @@ def get_photo(image: np.ndarray, model: YOLO) -> tuple:
             - img_boxes (np.ndarray): исходное изображение с выделенным bounding box
     '''
     # Проверки на правильный тип данных
-    if not isinstance(image, np.ndarray):
-        raise TypeError('image должен быть объектом np.ndarray')
+    if isinstance(image, np.ndarray):
+        pass
+
+    if isinstance(image, str):
+        image = cv2.imread(image)
+
+    if not isinstance(image, (np.ndarray, str)):
+        raise TypeError('image должна быть либо строкой с путем, либо np.ndarray')
 
     if not isinstance(model, YOLO):
         raise TypeError('model должна быть объектом YOLO')

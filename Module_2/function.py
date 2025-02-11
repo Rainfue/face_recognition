@@ -80,7 +80,7 @@ def get_photo(image: str | np.ndarray, model: YOLO) -> tuple:
 # функция для отправки результатов распознавания
 def face_recognition(
         crop: np.ndarray, 
-        img_path: str,
+        image_boxes: np.ndarray,
         emb_df: pd.DataFrame
                      ) -> tuple:
     '''
@@ -98,8 +98,8 @@ def face_recognition(
     if not isinstance(crop, np.ndarray):                                   
         raise TypeError('crop должен быть объектом np.ndarray')
 
-    if not isinstance(img_path, str):
-        raise TypeError('img_path должен быть объектом str')
+    if not isinstance(image_boxes, np.ndarray):
+        raise TypeError('image_boxes должен быть объектом np.ndarray')
 
     if not isinstance(emb_df, pd.DataFrame):
         raise TypeError('emb_df должен быть объектом pd.DataFrame')
@@ -149,4 +149,4 @@ def face_recognition(
         return 'unknown'
     # иначе, возвращаем результаты сходства в кортеже
     else:
-        return (similar, name, img_path, out_path)    
+        return (similar, name, image_boxes, out_path)    

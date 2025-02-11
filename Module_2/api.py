@@ -45,13 +45,13 @@ df_path =r'face_recognition\Module_2\Data\train.pkl'
 # Функция для отображения изображений
 def output_images(user_img, path2: str, caption2: str):
     # преобразование цветовой гаммы изображений
-    img_rgb = cv2.cvtColor(user_img, cv2.COLOR_BGR2RGB)
+    # img_rgb = cv2.cvtColor(user_img, cv2.COLOR_BGR2RGB)
     out_rgb = cv2.cvtColor(cv2.imread(path2), cv2.COLOR_BGR2RGB)
     # разделение на 2 части
     col1, col2 = st.columns(2)
     # вывод исходного изображения
     with col1:
-        st.image(img_rgb, caption='Input image', use_container_width=True)
+        st.image(user_img, caption='Input image', use_container_width=True)
     # вывод итогового распознания
     with col2:
         st.image(out_rgb, caption=f'{caption2}', use_container_width=True)
@@ -109,6 +109,7 @@ if uploader is not None:
                     case tuple():
                         # получаем кроп лица
                         face, img_boxes = crop_test
+                        img_boxes = cv2.cvtColor(img_boxes, cv2.COLOR_BGR2RGB)
                         # пробуем получить данные о распознавании        
                         rec_test = face_recognition(face, 'test', df)
 
@@ -117,11 +118,11 @@ if uploader is not None:
                             # если фотография не прошла трешхолд схожести 
                             # (такого лица нет в базе данных)
                             case str() if rec_test == 'unknown':
-                                output_images(user_img, dont_know, 'Такого человека нет в базе данных')
+                                output_images(img_boxes, dont_know, 'Такого человека нет в базе данных')
 
                             # если не получилось извлечь эмбеддинг
                             case str() if rec_test == 'no_emb':
-                                output_images(user_img, no_face, 'Не удалось извлечь эмбеддинг лица\nПопробуйте загрузить фотографию с более четким лицом')
+                                output_images(img_boxes, no_face, 'Не удалось извлечь эмбеддинг лица\nПопробуйте загрузить фотографию с более четким лицом')
 
                             # если все прошло успешно
                             case tuple():
